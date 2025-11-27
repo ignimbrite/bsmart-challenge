@@ -13,17 +13,21 @@ API REST + WebSocket para gestión de productos y categorías en Go.
 - Docker y Docker Compose
 
 ## Configuración rápida
-1) Copia variables de entorno:
+1) Variables de entorno:
    ```bash
    cp .env.example .env
    ```
-2) Levanta PostgreSQL
+
+2) Base de datos:
    ```bash
    make compose-up
    ```
+
 3) Ejecuta la API:
    ```bash
    make run
    ```
 
-Health check: `http://localhost:8080/health`.# bsmart-challenge
+## Endpoints
+- `GET /api/products` — Lista productos
+- `GET /health` — Health check

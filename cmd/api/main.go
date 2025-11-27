@@ -4,13 +4,37 @@ import (
 	"log"
 
 	"github.com/ignimbrite/bsmart-challenge/internal/config"
+	appdb "github.com/ignimbrite/bsmart-challenge/internal/db"
+	"github.com/ignimbrite/bsmart-challenge/internal/models"
+	"github.com/ignimbrite/bsmart-challenge/internal/seed"
 	"github.com/ignimbrite/bsmart-challenge/internal/server"
 )
 
 func main() {
 	cfg := config.Load()
 
-	srv := server.New(cfg)
+	db, err := appdb.Connect(cfg)
+	if err != nil {
+		log.Fatalf("failed to connect database: %v", err)
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("failed to get sql DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	if err := models.AutoMigrate(db); err != nil {
+		log.Fatalf("auto migrate failed: %v", err)
+	}
+
+	if cfg.AppEnv == "development" {
+		if err := seed.Run(db); err != nil {
+			log.Fatalf("seed failed: %v", err)
+		}
+	}
+
+	srv := server.New(cfg, db)
 
 	log.Printf("starting api server on :%s (env: %s)", cfg.HTTPPort, cfg.AppEnv)
 
