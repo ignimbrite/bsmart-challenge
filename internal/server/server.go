@@ -12,12 +12,13 @@ import (
 )
 
 type Server struct {
-	cfg         config.Config
-	db          *gorm.DB
-	engine      *gin.Engine
-	tokenSecret []byte
-	tokenTTL    time.Duration
-	wsHub       *Hub
+	cfg            config.Config
+	db             *gorm.DB
+	engine         *gin.Engine
+	tokenSecret    []byte
+	tokenTTL       time.Duration
+	wsHub          *Hub
+	allowedOrigins []string
 }
 
 func New(cfg config.Config, db *gorm.DB, tokenSecret []byte, tokenTTL time.Duration) *Server {
@@ -30,12 +31,13 @@ func New(cfg config.Config, db *gorm.DB, tokenSecret []byte, tokenTTL time.Durat
 	go hub.Run()
 
 	srv := &Server{
-		cfg:         cfg,
-		db:          db,
-		engine:      engine,
-		tokenSecret: tokenSecret,
-		tokenTTL:    tokenTTL,
-		wsHub:       hub,
+		cfg:            cfg,
+		db:             db,
+		engine:         engine,
+		tokenSecret:    tokenSecret,
+		tokenTTL:       tokenTTL,
+		wsHub:          hub,
+		allowedOrigins: cfg.WSAllowed,
 	}
 
 	srv.registerRoutes()

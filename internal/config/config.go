@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -11,6 +12,7 @@ type Config struct {
 	DatabaseURL   string
 	JWTSecret     string
 	JWTExpiration string
+	WSAllowed     []string
 }
 
 func Load() Config {
@@ -20,6 +22,7 @@ func Load() Config {
 		DatabaseURL:   getEnv("DATABASE_URL", buildDatabaseURL()),
 		JWTSecret:     getEnv("JWT_SECRET", "dev-secret"),
 		JWTExpiration: getEnv("JWT_EXPIRATION", "1h"),
+		WSAllowed:     parseCSV(getEnv("WS_ALLOWED_ORIGINS", "http://localhost:8080")),
 	}
 }
 
@@ -38,4 +41,15 @@ func buildDatabaseURL() string {
 	name := getEnv("DB_NAME", "bsmart")
 
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, name)
+}
+
+func parseCSV(value string) []string {
+	var items []string
+	for _, part := range strings.Split(value, ",") {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			items = append(items, part)
+		}
+	}
+	return items
 }

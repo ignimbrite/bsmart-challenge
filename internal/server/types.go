@@ -32,7 +32,7 @@ type UpdateCategoryRequest struct {
 type CreateProductRequest struct {
 	Name        string  `json:"name" binding:"required,min=2,max=255"`
 	Description string  `json:"description" binding:"omitempty,max=2000"`
-	Price       float64 `json:"price" binding:"required,gt=0"`
+	Price       float64 `json:"price" binding:"required,gte=0"`
 	Stock       int     `json:"stock" binding:"required,gte=0"`
 	CategoryIDs []uint  `json:"category_ids" binding:"required,dive,gt=0"`
 }
@@ -40,7 +40,7 @@ type CreateProductRequest struct {
 type UpdateProductRequest struct {
 	Name        *string  `json:"name" binding:"omitempty,min=2,max=255"`
 	Description *string  `json:"description" binding:"omitempty,max=2000"`
-	Price       *float64 `json:"price" binding:"omitempty,gt=0"`
+	Price       *float64 `json:"price" binding:"omitempty,gte=0"`
 	Stock       *int     `json:"stock" binding:"omitempty,gte=0"`
 	CategoryIDs []uint   `json:"category_ids" binding:"omitempty,dive,gt=0"`
 }

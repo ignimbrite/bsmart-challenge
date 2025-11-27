@@ -221,6 +221,16 @@ func (s *Server) productHistory(c *gin.Context) {
 		return
 	}
 
+	var product models.Product
+	if err := s.db.Select("id").First(&product, id).Error; err != nil {
+		if errorsIs(err, gorm.ErrRecordNotFound) {
+			respondError(c, http.StatusNotFound, "product not found")
+			return
+		}
+		respondError(c, http.StatusInternalServerError, "failed to fetch product")
+		return
+	}
+
 	var query HistoryQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
 		respondError(c, http.StatusBadRequest, "invalid query params")

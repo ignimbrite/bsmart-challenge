@@ -138,6 +138,7 @@ erDiagram
 - `HTTP_PORT` (default `8080`)
 - `DATABASE_URL` o `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (en Docker, `DB_HOST=db`)
 - `JWT_SECRET`, `JWT_EXPIRATION` (default `1h`)
+- `WS_ALLOWED_ORIGINS`
 
 ## 9. Deployment
 - Docker (recomendado): `make docker-up` (build + app + DB).

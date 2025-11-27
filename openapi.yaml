@@ -1,0 +1,694 @@
+openapi: 3.0.3
+info:
+  title: BSMART Challenge API
+  version: "1.0.0"
+  description: |
+    REST API and WebSocket for managing products and categories.
+    JWT is required on `/api` and `/ws` (Bearer header or `?token=`), except for `/health` and `/api/auth/login`.
+servers:
+  - url: http://localhost:8080
+    description: Local
+tags:
+  - name: Health
+  - name: Auth
+  - name: Products
+  - name: Categories
+  - name: Search
+  - name: WebSocket
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: API is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and obtain JWT
+      description: "Returns a JWT to be sent as `Authorization: Bearer <token>` on protected endpoints."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/products:
+    get:
+      tags: [Products]
+      summary: List products
+      description: Requires role `admin` or `client`.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/ProductSort"
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Filter by category id
+      responses:
+        "200":
+          description: Paginated products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags: [Products]
+      summary: Create product
+      description: Requires role `admin`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/products/{id}:
+    get:
+      tags: [Products]
+      summary: Get product by id
+      description: Requires role `admin` or `client`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags: [Products]
+      summary: Update product
+      description: Requires role `admin`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags: [Products]
+      summary: Delete product
+      description: Requires role `admin`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/products/{id}/history:
+    get:
+      tags: [Products]
+      summary: Product price/stock history
+      description: Requires role `admin` or `client`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+        - in: query
+          name: start
+          description: Filter from date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end
+          description: Filter until date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: History items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductHistoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      description: Requires role `admin` or `client`.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/CategorySort"
+      responses:
+        "200":
+          description: Paginated categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags: [Categories]
+      summary: Create category
+      description: Requires role `admin`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/categories/{id}:
+    put:
+      tags: [Categories]
+      summary: Update category
+      description: Requires role `admin`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags: [Categories]
+      summary: Delete category
+      description: Requires role `admin`.
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/search:
+    get:
+      tags: [Search]
+      summary: Full-text search for products or categories
+      description: Requires role `admin` or `client`.
+      parameters:
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [product, category]
+          description: Resource type to search
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [price_asc, price_desc, name_asc, name_desc, newest, oldest]
+          description: Sort options (product sorts are used when `type=product`, category sorts when `type=category`)
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ProductListResponse"
+                  - $ref: "#/components/schemas/CategoryListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /ws:
+    get:
+      tags: [WebSocket]
+      summary: Subscribe to product/category events
+      description: |
+        Upgrade to WebSocket. Send JWT via `Authorization: Bearer` header or `?token=` query string.
+        Events emitted: `product.created`, `product.updated`, `product.deleted`, `category.created`, `category.updated`, `category.deleted`.
+      responses:
+        "101":
+          description: Switching protocols to WebSocket
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number (default 1)
+    PageSize:
+      in: query
+      name: page_size
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 25
+        default: 25
+      description: Items per page (max 25)
+    Query:
+      in: query
+      name: q
+      schema:
+        type: string
+      description: Search text
+    ProductSort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum: [price_asc, price_desc, name_asc, name_desc, newest, oldest]
+      description: Sorting for products
+    CategorySort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum: [name_asc, name_desc, newest, oldest]
+      description: Sorting for categories
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      description: Resource id
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+      required: [status]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@bsmart.test
+        password:
+          type: string
+          format: password
+          example: admin123
+      required: [email, password]
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        role:
+          type: string
+          example: admin
+        email:
+          type: string
+          format: email
+      required: [token, role, email]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: invalid payload
+      required: [error]
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        page_size:
+          type: integer
+          example: 25
+        total:
+          type: integer
+          example: 42
+      required: [page, page_size, total]
+    ProductResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Product"
+      required: [data]
+    ProductListResponse:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Product"
+          required: [data]
+    CategoryResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Category"
+      required: [data]
+    CategoryListResponse:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Category"
+          required: [data]
+    ProductHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductHistory"
+      required: [data]
+    Product:
+      type: object
+      properties:
+        ID:
+          type: integer
+          format: int64
+          example: 1
+        Name:
+          type: string
+          example: Mouse
+        Description:
+          type: string
+          example: Wireless mouse
+        Price:
+          type: number
+          format: double
+          example: 25.5
+        Stock:
+          type: integer
+          example: 5
+        Categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+      required: [ID, Name, Price, Stock, CreatedAt, UpdatedAt]
+    Category:
+      type: object
+      properties:
+        ID:
+          type: integer
+          format: int64
+          example: 1
+        Name:
+          type: string
+          example: Peripherals
+        Description:
+          type: string
+          example: Input devices
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+      required: [ID, Name, CreatedAt, UpdatedAt]
+    ProductHistory:
+      type: object
+      properties:
+        ID:
+          type: integer
+          format: int64
+          example: 10
+        ProductID:
+          type: integer
+          format: int64
+          example: 1
+        Price:
+          type: number
+          format: double
+          example: 25.5
+        Stock:
+          type: integer
+          example: 5
+        ChangedAt:
+          type: string
+          format: date-time
+      required: [ID, ProductID, Price, Stock, ChangedAt]
+    CreateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        price:
+          type: number
+          format: double
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        category_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+          minItems: 1
+      required: [name, price, stock, category_ids]
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        price:
+          type: number
+          format: double
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        category_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+      description: "Only send the fields to change; `category_ids: []` clears associations."
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+      required: [name]
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+      description: Only send the fields to change.
