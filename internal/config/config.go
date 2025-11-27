@@ -6,16 +6,20 @@ import (
 )
 
 type Config struct {
-	AppEnv      string
-	HTTPPort    string
-	DatabaseURL string
+	AppEnv        string
+	HTTPPort      string
+	DatabaseURL   string
+	JWTSecret     string
+	JWTExpiration string
 }
 
 func Load() Config {
 	return Config{
-		AppEnv:      getEnv("APP_ENV", "development"),
-		HTTPPort:    getEnv("HTTP_PORT", "8080"),
-		DatabaseURL: getEnv("DATABASE_URL", buildDatabaseURL()),
+		AppEnv:        getEnv("APP_ENV", "development"),
+		HTTPPort:      getEnv("HTTP_PORT", "8080"),
+		DatabaseURL:   getEnv("DATABASE_URL", buildDatabaseURL()),
+		JWTSecret:     getEnv("JWT_SECRET", "dev-secret"),
+		JWTExpiration: getEnv("JWT_EXPIRATION", "1h"),
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/ignimbrite/bsmart-challenge/internal/config"
 	appdb "github.com/ignimbrite/bsmart-challenge/internal/db"
@@ -34,7 +35,12 @@ func main() {
 		}
 	}
 
-	srv := server.New(cfg, db)
+	tokenTTL, err := time.ParseDuration(cfg.JWTExpiration)
+	if err != nil {
+		log.Fatalf("invalid JWT_EXPIRATION: %v", err)
+	}
+
+	srv := server.New(cfg, db, []byte(cfg.JWTSecret), tokenTTL)
 
 	log.Printf("starting api server on :%s (env: %s)", cfg.HTTPPort, cfg.AppEnv)
 
