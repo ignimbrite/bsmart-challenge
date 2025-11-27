@@ -18,31 +18,15 @@ type AuthClaims struct {
 
 func (s *Server) authMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			respondError(c, http.StatusUnauthorized, "missing authorization header")
+		tokenStr, err := s.extractToken(c)
+		if err != nil {
+			respondError(c, http.StatusUnauthorized, err.Error())
 			c.Abort()
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			respondError(c, http.StatusUnauthorized, "invalid authorization header")
-			c.Abort()
-			return
-		}
-
-		tokenStr := parts[1]
-
-		claims := &AuthClaims{}
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, errors.New("unexpected signing method")
-			}
-			return s.tokenSecret, nil
-		})
-
-		if err != nil || !token.Valid {
+		claims, err := s.parseToken(tokenStr)
+		if err != nil {
 			respondError(c, http.StatusUnauthorized, "invalid token")
 			c.Abort()
 			return
@@ -57,6 +41,40 @@ func (s *Server) authMiddleware(requiredRoles ...string) gin.HandlerFunc {
 		c.Set(userContextKey, &AuthContext{UserID: claims.UserID, Role: claims.Role})
 		c.Next()
 	}
+}
+
+func (s *Server) extractToken(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			return "", errors.New("invalid authorization header")
+		}
+		return parts[1], nil
+	}
+
+	if token := c.Query("token"); token != "" {
+		return token, nil
+	}
+
+	return "", errors.New("missing authorization token")
+}
+
+func (s *Server) parseToken(tokenStr string) (*AuthClaims, error) {
+	claims := &AuthClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return s.tokenSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+	return claims, nil
 }
 
 func roleAllowed(role string, allowed []string) bool {

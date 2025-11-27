@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BSMART Products</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.5; }
+    h1 { margin-bottom: 8px; }
+    section { margin-bottom: 24px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+    label { display: block; margin-top: 8px; }
+    input, button { padding: 8px; margin-top: 4px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    pre { background: #f6f6f6; padding: 12px; border-radius: 6px; overflow: auto; }
+    #status { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>BSMART Products</h1>
+  <p id="status">Not authenticated</p>
+
+  <section>
+    <h2>Login</h2>
+    <div class="row">
+      <label>Email <input id="email" type="email" value="admin@bsmart.test"></label>
+      <label>Password <input id="password" type="password" value="admin123"></label>
+      <button onclick="login()">Login</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Products</h2>
+    <div class="row">
+      <button onclick="loadProducts()">Load products</button>
+      <input id="search" type="text" placeholder="Search term">
+      <button onclick="searchProducts()">Search</button>
+    </div>
+    <pre id="products"></pre>
+  </section>
+
+  <section>
+    <h2>WebSocket events</h2>
+    <div class="row">
+      <button onclick="connectWs()">Connect</button>
+      <button onclick="disconnectWs()">Disconnect</button>
+    </div>
+    <pre id="events"></pre>
+  </section>
+
+  <script>
+    const apiBase = window.location.origin;
+    let token = null;
+    let ws;
+
+    function setStatus(text) {
+      document.getElementById('status').innerText = text;
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch(apiBase + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error('Login failed');
+        const data = await res.json();
+        token = data.token;
+        setStatus(`Authenticated as ${data.email} (role: ${data.role})`);
+      } catch (err) {
+        setStatus('Login error');
+        console.error(err);
+      }
+    }
+
+    async function loadProducts() {
+      await fetchAndRender('/api/products', 'products');
+    }
+
+    async function searchProducts() {
+      const q = document.getElementById('search').value;
+      const path = `/api/search?type=product&q=${encodeURIComponent(q)}`;
+      await fetchAndRender(path, 'products');
+    }
+
+    async function fetchAndRender(path, targetId) {
+      try {
+        const res = await fetch(apiBase + path, {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        const text = await res.text();
+        document.getElementById(targetId).innerText = text;
+      } catch (err) {
+        document.getElementById(targetId).innerText = 'Error';
+        console.error(err);
+      }
+    }
+
+    function connectWs() {
+      if (ws) return;
+      if (!token) {
+        appendEvent('Login required before opening WebSocket');
+        return;
+      }
+      ws = new WebSocket(buildWsUrl());
+      ws.onopen = () => appendEvent('WebSocket connected');
+      ws.onmessage = (e) => appendEvent(e.data);
+      ws.onclose = () => { appendEvent('WebSocket disconnected'); ws = null; };
+      ws.onerror = (err) => appendEvent('WebSocket error');
+    }
+
+    function disconnectWs() {
+      if (ws) ws.close();
+    }
+
+    function appendEvent(msg) {
+      const el = document.getElementById('events');
+      el.innerText = (msg + '\n' + el.innerText).trim().slice(0, 5000);
+    }
+
+    function buildWsUrl() {
+      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+      const url = new URL(protocol + '://' + location.host + '/ws');
+      if (token) url.searchParams.set('token', token);
+      return url.toString();
+    }
+  </script>
+</body>
+</html>

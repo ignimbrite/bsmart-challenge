@@ -19,8 +19,7 @@ API REST + WebSocket para gestión de productos y categorías en Go.
    make docker-up
    # o docker compose up --build -d
    ```
-   Health check: `http://localhost:8080/health` (DB host en Compose: `db`).
-
+   
 ## 3. Ejecución local (Go nativo, DB en Docker)
 1) Copiar variables:
    ```bash
@@ -36,13 +35,28 @@ API REST + WebSocket para gestión de productos y categorías en Go.
    ```
 
 ## 4. Endpoints principales
-- Auth: `POST /api/auth/login` (JWT). Seed dev: `admin@bsmart.test` / `admin123`.
-- Products: `GET /api/products`, `GET /api/products/:id`, `POST /api/products`, `PUT /api/products/:id`, `DELETE /api/products/:id`, `GET /api/products/:id/history?start=YYYY-MM-DD&end=YYYY-MM-DD`
-- Categories: `GET /api/categories`, `POST /api/categories`, `PUT /api/categories/:id`, `DELETE /api/categories/:id`
-- Search: `GET /api/search?type=product|category&q=&page=&page_size=&sort=`
-- WebSocket: `GET /ws` (eventos `product.*` y `category.*`); Health: `GET /health`
+- **Auth**: `POST /api/auth/login` — seed dev: `admin@bsmart.test` / `admin123`.
+- **Productos** (GET `admin|client`; escritura `admin`):
+  - `GET /api/products`
+  - `GET /api/products/:id`
+  - `POST /api/products`
+  - `PUT /api/products/:id`
+  - `DELETE /api/products/:id`
+  - `GET /api/products/:id/history?start=YYYY-MM-DD&end=YYYY-MM-DD`
+- **Categorías** (GET `admin|client`; escritura `admin`):
+  - `GET /api/categories`
+  - `POST /api/categories`
+  - `PUT /api/categories/:id`
+  - `DELETE /api/categories/:id`
+- **Búsqueda**: `GET /api/search?type=product|category&q=&page=&page_size=&sort=` (rol `admin|client`).
+- **WebSocket**: `GET /ws` (eventos `product.*`, `category.*`) — requiere token.
+- **Health**: `GET /health` (sin auth).
 
-Notas: rutas de escritura requieren rol `admin`; usuario `client` (seed) destinado a acceso de solo lectura; `page_size` máx 100; `sort` en productos `price_asc|price_desc|name_asc|name_desc|newest|oldest`, en categorías `name_asc|name_desc|newest|oldest`; historial registra cambios de `price/stock`.
+Notas rápidas:
+- JWT obligatorio en `/api` (salvo `/auth/login`) y `/ws` (header `Authorization: Bearer` o `?token=`); lectura permite rol `admin` o `client`, escritura solo `admin`.
+- Usuario seed `client@bsmart.test` pensado para lectura; `admin@bsmart.test` para CRUD.
+- `page_size` máximo 100; `sort` en productos: `price_asc|price_desc|name_asc|name_desc|newest|oldest`; en categorías: `name_asc|name_desc|newest|oldest`.
+- El historial registra cada cambio de `price` o `stock`.
 
 ## 5. Ejemplos rápidos
 - Login:
@@ -61,7 +75,9 @@ Notas: rutas de escritura requieren rol `admin`; usuario `client` (seed) destina
   ```
 - WebSocket:
   ```bash
-  wscat -c ws://localhost:8080/ws
+  TOKEN=... # token de login
+  wscat -H "Authorization: Bearer $TOKEN" -c "ws://localhost:8080/ws"
+  # o bien ws://localhost:8080/ws?token=$TOKEN
   ```
 
 Eventos WS (JSON): `product.created|updated|deleted` y `category.created|updated|deleted` con payload del recurso o `{id}` en deletes.
@@ -74,7 +90,7 @@ Eventos WS (JSON): `product.created|updated|deleted` y `category.created|updated
 - WebSocket broadcast de eventos CRUD para productos y categorías vía hub simple.
 - Dockerfile + docker-compose para reproducibilidad; Makefile con comandos básicos.
 
-## 6. Diagrama ER (Mermaid)
+## 7. Diagrama ER (Mermaid)
 ```mermaid
 erDiagram
   products ||--o{ product_categories : contains
@@ -117,13 +133,13 @@ erDiagram
   }
 ```
 
-## 7. Variables de entorno
+## 8. Variables de entorno
 - `APP_ENV` (default `development`)
 - `HTTP_PORT` (default `8080`)
 - `DATABASE_URL` o `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (en Docker, `DB_HOST=db`)
 - `JWT_SECRET`, `JWT_EXPIRATION` (default `1h`)
 
-## 8. Deployment
+## 9. Deployment
 - Docker (recomendado): `make docker-up` (build + app + DB).
 - Local: `docker compose up -d db` + `make run`.
 - Imagen manual: `make docker-build` y `docker run -p 8080:8080 --env-file .env bsmart-api:latest`.

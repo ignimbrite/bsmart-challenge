@@ -48,19 +48,19 @@ func (s *Server) registerRoutes() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	s.engine.GET("/ws", s.handleWebSocket)
+	s.engine.GET("/ws", s.authMiddleware("admin", "client"), s.handleWebSocket)
 
 	api := s.engine.Group("/api")
 
 	api.POST("/auth/login", s.login)
 
-	api.GET("/products", s.listProducts)
-	api.GET("/products/:id", s.getProduct)
-	api.GET("/products/:id/history", s.productHistory)
-
-	api.GET("/categories", s.listCategories)
-
-	api.GET("/search", s.search)
+	protected := api.Group("/")
+	protected.Use(s.authMiddleware("admin", "client"))
+	protected.GET("/products", s.listProducts)
+	protected.GET("/products/:id", s.getProduct)
+	protected.GET("/products/:id/history", s.productHistory)
+	protected.GET("/categories", s.listCategories)
+	protected.GET("/search", s.search)
 
 	admin := api.Group("/")
 	admin.Use(s.authMiddleware("admin"))
