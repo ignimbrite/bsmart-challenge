@@ -1,0 +1,33 @@
+bsmart_challenge.md
+bsmart_challenge.pdf
+bsmart_challenge.md
+bsmart_challenge.pdf
+
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build/test artifacts
+*.test
+*.out
+coverage*.txt
+coverage*.out
+
+# Dependency directories
+vendor/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Environment / local
+.env
+*.local
+.DS_Store
+postgres_data/
