@@ -199,8 +199,14 @@ func (s *Server) deleteProduct(c *gin.Context) {
 		return
 	}
 
-	if err := s.db.Delete(&models.Product{}, id).Error; err != nil {
+	res := s.db.Delete(&models.Product{}, id)
+	if err := res.Error; err != nil {
 		respondError(c, http.StatusInternalServerError, "failed to delete product")
+		return
+	}
+
+	if res.RowsAffected == 0 {
+		respondError(c, http.StatusNotFound, "product not found")
 		return
 	}
 

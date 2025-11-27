@@ -120,8 +120,14 @@ func (s *Server) deleteCategory(c *gin.Context) {
 		return
 	}
 
-	if err := s.db.Delete(&models.Category{}, id).Error; err != nil {
+	res := s.db.Delete(&models.Category{}, id)
+	if err := res.Error; err != nil {
 		respondError(c, http.StatusInternalServerError, "failed to delete category")
+		return
+	}
+
+	if res.RowsAffected == 0 {
+		respondError(c, http.StatusNotFound, "category not found")
 		return
 	}
 

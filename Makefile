@@ -28,3 +28,11 @@ ifeq ($(strip $(DOCKER_COMPOSE)),)
 else
 	$(DOCKER_COMPOSE) down
 endif
+
+.PHONY: docker-build docker-up
+
+docker-build:
+	docker build -t bsmart-api:latest .
+
+docker-up:
+	$(DOCKER_COMPOSE) up --build -d
