@@ -42,7 +42,7 @@ API REST + WebSocket para gestión de productos y categorías en Go.
 - Search: `GET /api/search?type=product|category&q=&page=&page_size=&sort=`
 - WebSocket: `GET /ws` (eventos `product.*` y `category.*`); Health: `GET /health`
 
-Notas: rutas de escritura requieren rol `admin`; `page_size` máx 100; `sort` en productos `price_asc|price_desc|name_asc|name_desc|newest|oldest`, en categorías `name_asc|name_desc|newest|oldest`; historial registra cambios de `price/stock`.
+Notas: rutas de escritura requieren rol `admin`; usuario `client` (seed) destinado a acceso de solo lectura; `page_size` máx 100; `sort` en productos `price_asc|price_desc|name_asc|name_desc|newest|oldest`, en categorías `name_asc|name_desc|newest|oldest`; historial registra cambios de `price/stock`.
 
 ## 5. Ejemplos rápidos
 - Login:
@@ -65,6 +65,14 @@ Notas: rutas de escritura requieren rol `admin`; `page_size` máx 100; `sort` en
   ```
 
 Eventos WS (JSON): `product.created|updated|deleted` y `category.created|updated|deleted` con payload del recurso o `{id}` en deletes.
+
+## 6. Decisiones de diseño
+- Gin para ruteo/middleware; logging y recover habilitados.
+- GORM + PostgreSQL con `AutoMigrate` y seed solo en `APP_ENV=development`.
+- JWT HS256 para auth; rol `admin` para escritura, rol `client` de solo lectura.
+- Paginación/orden estándar con límites de page_size; búsquedas simples con `ILIKE`.
+- WebSocket broadcast de eventos CRUD para productos y categorías vía hub simple.
+- Dockerfile + docker-compose para reproducibilidad; Makefile con comandos básicos.
 
 ## 6. Diagrama ER (Mermaid)
 ```mermaid

@@ -63,6 +63,10 @@ func Run(db *gorm.DB) error {
 		return err
 	}
 
+	if err := seedClient(db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -91,5 +95,33 @@ func seedAdmin(db *gorm.DB) error {
 	}
 
 	log.Printf("seed: admin user created email=%s password=%s", email, password)
+	return nil
+}
+
+func seedClient(db *gorm.DB) error {
+	const email = "client@bsmart.test"
+	const password = "client123"
+
+	var existing models.User
+	if err := db.Where("email = ?", email).First(&existing).Error; err == nil {
+		return nil
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user := models.User{
+		Email:        email,
+		PasswordHash: string(hash),
+		Role:         "client",
+	}
+
+	if err := db.Create(&user).Error; err != nil {
+		return err
+	}
+
+	log.Printf("seed: client user created email=%s password=%s", email, password)
 	return nil
 }
