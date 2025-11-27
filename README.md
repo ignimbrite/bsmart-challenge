@@ -19,7 +19,7 @@ API REST + WebSocket para gestión de productos y categorías en Go.
    make docker-up
    # o docker compose up --build -d
    ```
-   
+
 ## 3. Ejecución local (Go nativo, DB en Docker)
 1) Copiar variables:
    ```bash
@@ -55,7 +55,7 @@ API REST + WebSocket para gestión de productos y categorías en Go.
 Notas rápidas:
 - JWT obligatorio en `/api` (salvo `/auth/login`) y `/ws` (header `Authorization: Bearer` o `?token=`); lectura permite rol `admin` o `client`, escritura solo `admin`.
 - Usuario seed `client@bsmart.test` pensado para lectura; `admin@bsmart.test` para CRUD.
-- `page_size` máximo 100; `sort` en productos: `price_asc|price_desc|name_asc|name_desc|newest|oldest`; en categorías: `name_asc|name_desc|newest|oldest`.
+- `page_size` máximo: 25; `sort` en productos: `price_asc|price_desc|name_asc|name_desc|newest|oldest`; en categorías: `name_asc|name_desc|newest|oldest`.
 - El historial registra cada cambio de `price` o `stock`.
 
 ## 5. Ejemplos rápidos

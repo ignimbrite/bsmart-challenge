@@ -38,8 +38,8 @@ func parsePagination(q PaginationQuery) (page, pageSize int, sort string) {
 	if page <= 0 {
 		page = 1
 	}
-	if pageSize <= 0 || pageSize > 100 {
-		pageSize = 10
+	if pageSize <= 0 || pageSize > 25 {
+		pageSize = 25
 	}
 	if sort == "" {
 		sort = "created_at desc"
