@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +41,7 @@ func New(cfg config.Config, db *gorm.DB, tokenSecret []byte, tokenTTL time.Durat
 		allowedOrigins: cfg.WSAllowed,
 	}
 
+	engine.Use(corsMiddleware(srv.allowedOrigins))
 	srv.registerRoutes()
 
 	return srv
@@ -85,4 +87,49 @@ func (s *Server) Run() error {
 
 func (s *Server) Engine() *gin.Engine {
 	return s.engine
+}
+
+func corsMiddleware(allowed []string) gin.HandlerFunc {
+	normalized := make(map[string]struct{})
+	for _, o := range allowed {
+		if o == "*" {
+			normalized["*"] = struct{}{}
+			continue
+		}
+		o = strings.TrimSuffix(strings.ToLower(strings.TrimSpace(o)), "/")
+		if o != "" {
+			normalized[o] = struct{}{}
+		}
+	}
+
+	isAllowed := func(origin string) bool {
+		if len(normalized) == 0 {
+			return false
+		}
+		if _, ok := normalized["*"]; ok {
+			return true
+		}
+		origin = strings.TrimSuffix(strings.ToLower(strings.TrimSpace(origin)), "/")
+		_, ok := normalized[origin]
+		return ok
+	}
+
+	return func(c *gin.Context) {
+		origin := c.GetHeader("Origin")
+		allowOrigin := origin != "" && isAllowed(origin)
+		if allowOrigin {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Vary", "Origin")
+		}
+		if allowOrigin || c.Request.Method == http.MethodOptions {
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Accept")
+		}
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
 }
