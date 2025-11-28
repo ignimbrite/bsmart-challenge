@@ -64,16 +64,16 @@ Notas rápidas:
 - El historial registra cada cambio de `price` o `stock`.
 
 ## 5. Ejemplos rápidos
-- Login:
+- Login (Docker expone en puerto 80; si corres `make run` usa 8080):
   ```bash
-  curl -X POST http://localhost:8080/api/auth/login \
+  curl -X POST http://localhost/api/auth/login \
     -H 'Content-Type: application/json' \
     -d '{"email":"admin@bsmart.test","password":"admin123"}'
   ```
 - Crear producto:
   ```bash
   TOKEN=... # token de login
-  curl -X POST http://localhost:8080/api/products \
+  curl -X POST http://localhost/api/products \
     -H "Authorization: Bearer $TOKEN" \
     -H 'Content-Type: application/json' \
     -d '{"name":"Mouse","description":"Wireless","price":25.5,"stock":5,"category_ids":[1]}'
@@ -81,8 +81,8 @@ Notas rápidas:
 - WebSocket:
   ```bash
   TOKEN=... # token de login
-  wscat -H "Authorization: Bearer $TOKEN" -c "ws://localhost:8080/ws"
-  # o bien ws://localhost:8080/ws?token=$TOKEN
+  wscat -H "Authorization: Bearer $TOKEN" -c "ws://localhost/ws"
+  # o bien ws://localhost/ws?token=$TOKEN
   ```
 
 Eventos WS (JSON): `product.created|updated|deleted` y `category.created|updated|deleted` con payload del recurso o `{id}` en deletes.

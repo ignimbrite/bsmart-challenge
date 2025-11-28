@@ -6,8 +6,10 @@ info:
     REST API and WebSocket for managing products and categories.
     JWT is required on `/api` and `/ws` (Bearer header or `?token=`), except for `/health` and `/api/auth/login`.
 servers:
+  - url: http://localhost
+    description: Local (Docker, puerto 80)
   - url: http://localhost:8080
-    description: Local
+    description: Local (make run)
 tags:
   - name: Health
   - name: Auth
