@@ -48,14 +48,15 @@ API REST + WebSocket para gestión de productos y categorías en Go.
   - `POST /api/categories`
   - `PUT /api/categories/:id`
   - `DELETE /api/categories/:id`
-- **Búsqueda**: `GET /api/search?type=product|category&q=&page=&page_size=&sort=` (rol `admin|client`).
+- **Búsqueda**: `GET /api/search?type=product|category&q=&page=&page_size=&sort=` (rol `admin|client`). Para `type=category` se devuelven todas (sin paginación).
 - **WebSocket**: `GET /ws` (eventos `product.*`, `category.*`) — requiere token.
 - **Health**: `GET /health` (sin auth).
 
 Notas rápidas:
 - JWT obligatorio en `/api` (salvo `/auth/login`) y `/ws` (header `Authorization: Bearer` o `?token=`); lectura permite rol `admin` o `client`, escritura solo `admin`.
 - Usuario seed `client@bsmart.test` pensado para lectura; `admin@bsmart.test` para CRUD.
-- `page_size` máximo: 25; `sort` en productos: `price_asc|price_desc|name_asc|name_desc|newest|oldest`; en categorías: `name_asc|name_desc|newest|oldest`.
+- `page_size` máximo (productos/búsqueda): 25; `sort` en productos: `price_asc|price_desc|name_asc|name_desc|newest|oldest`; en categorías: `name_asc|name_desc|newest|oldest`.
+- Categorías (`GET /api/categories`) se devuelven completas (sin paginación).
 - El historial registra cada cambio de `price` o `stock`.
 
 ## 5. Ejemplos rápidos
@@ -86,7 +87,7 @@ Eventos WS (JSON): `product.created|updated|deleted` y `category.created|updated
 - Gin para ruteo/middleware; logging y recover habilitados.
 - GORM + PostgreSQL con `AutoMigrate` y seed solo en `APP_ENV=development`.
 - JWT HS256 para auth; rol `admin` para escritura, rol `client` de solo lectura.
-- Paginación/orden estándar con límites de page_size; búsquedas simples con `ILIKE`.
+- Paginación/orden estándar en productos y búsquedas de productos; categorías retornan todas en una llamada (incluye búsqueda de categorías); búsquedas simples con `ILIKE`.
 - WebSocket broadcast de eventos CRUD para productos y categorías vía hub simple.
 - Dockerfile + docker-compose para reproducibilidad; Makefile con comandos básicos.
 

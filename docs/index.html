@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BSMART Catalog</title>
+  <style>
+    :root {
+      --bg: #fdfdfd;
+      --panel: #ffffff;
+      --panel-2: #f4f4f4;
+      --border: #cfcfcf;
+      --text: #0c0c0c;
+      --muted: #4b4b4b;
+      --accent: #1a1a1a;
+      --accent-strong: #000000;
+      --shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      --positive: #e8e8e8;
+      --negative: #f0e8e8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Verdana", "Helvetica", "Arial", sans-serif;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      padding: 0;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text);
+      display: inline-block;
+    }
+
+    .session {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status-pill {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #ededed;
+      border: 1px solid var(--border);
+      color: var(--accent-strong);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .pane-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      grid-column: 1 / -1;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(420px, 92vw);
+      max-width: 100%;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 180ms ease-in-out, opacity 180ms ease-in-out;
+      z-index: 20;
+      border-radius: 0;
+      border-left: 1px solid var(--border);
+      box-shadow: -6px 0 18px rgba(0, 0, 0, 0.14);
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(1px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 150ms ease;
+      z-index: 15;
+    }
+
+    .drawer-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    label {
+      display: block;
+      color: var(--accent);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 1px solid #000;
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #efefef;
+      color: var(--accent-strong);
+      padding: 9px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn:hover { background: #e6e6e6; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn.primary {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--accent);
+    }
+
+    .btn.small { padding: 8px 10px; font-size: 13px; }
+    .btn.full { width: 100%; }
+
+    .stack { display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .between { justify-content: space-between; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .product-card {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      margin-bottom: 10px;
+      box-shadow: inset 0 0 0 1px #eee;
+    }
+
+    .product-row { display: flex; justify-content: space-between; gap: 12px; }
+    .product-name { font-size: 16px; font-weight: 700; color: #000; }
+    .product-meta { text-align: right; color: var(--muted); font-size: 13px; min-width: 140px; }
+    .product-price { font-weight: 800; color: #000; font-size: 20px; line-height: 1.1; }
+    .product-desc { margin: 6px 0; color: var(--muted); font-size: 13px; }
+    .meta-id { font-size: 11px; color: var(--muted); }
+
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .divider {
+      border: none;
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+
+    .empty {
+      padding: 14px;
+      color: var(--muted);
+      background: var(--panel-2);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .input-action {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .input-action input {
+      border-radius: 6px 0 0 6px;
+    }
+
+    .input-action .btn {
+      border-radius: 0 6px 6px 0;
+      padding: 9px 12px;
+      min-width: 44px;
+    }
+
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease;
+      z-index: 60;
+    }
+
+    .confirm-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .confirm-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.98);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+      padding: 18px;
+      width: min(420px, 92vw);
+      z-index: 70;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .confirm-dialog.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .confirm-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    .confirm-message {
+      margin: 0 0 14px 0;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      box-shadow: var(--shadow);
+      z-index: 50;
+      max-width: 360px;
+    }
+
+    .toast.hidden { display: none; }
+    .toast.negative { background: var(--negative); border-color: #d1bbbb; color: #1a1a1a; }
+    .toast.positive { background: var(--positive); border-color: #c7c7c7; color: #111; }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease-in-out;
+      border-radius: 8px;
+    }
+
+    .loading-overlay.visible {
+      opacity: 1;
+    }
+
+    .loading-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .topbar { position: static; }
+      .pane-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand"><span class="dot"></span>BSMART Catalog</div>
+      <div class="session">
+        <span id="status-text">Not signed in</span>
+        <span id="role-pill" class="status-pill" hidden></span>
+        <button id="logout-btn" class="btn ghost small" hidden>Log out</button>
+      </div>
+    </header>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <main class="grid">
+      <section class="card" id="login-card">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Access</div>
+            <div class="title">Sign in</div>
+          </div>
+        </div>
+        <form id="login-form" class="stack">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="username" value="admin@bsmart.test" required>
+          </div>
+          <div>
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" value="admin123" required>
+          </div>
+          <button type="submit" class="btn primary full" id="login-btn">Sign in</button>
+          <p class="helper">Default admin: admin@bsmart.test / admin123<br>Default client: client@bsmart.test / client123</p>
+        </form>
+      </section>
+
+      <section class="card wide requires-auth" id="products-card">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Products</div>
+            <div class="title">Catalog</div>
+          </div>
+          <div class="row">
+            <button class="btn ghost small" id="refresh-products">Refresh</button>
+            <button class="btn primary small" id="new-product-btn">New product</button>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="input-action">
+            <input id="search" type="search" placeholder="Search by name or description">
+            <button class="btn ghost small" type="button" id="search-submit">&#8594;</button>
+          </div>
+          <select id="category-filter">
+            <option value="">All categories</option>
+          </select>
+        </div>
+      </section>
+
+      <div class="pane-grid requires-auth" id="pane-grid">
+        <section class="card" id="products-list-card">
+          <div class="section-header">
+            <div>
+              <div class="title">Results</div>
+            </div>
+            <div class="pager">
+              <button class="btn ghost small" id="page-prev" type="button">&lt; Prev</button>
+              <div class="pill" id="page-label">Page 1</div>
+              <button class="btn ghost small" id="page-next" type="button">Next &gt;</button>
+            </div>
+          </div>
+          <div id="products-body" class="stack"></div>
+          <div id="products-loading" class="loading-overlay hidden">
+            <div class="loading-chip">Loading...</div>
+          </div>
+        </section>
+
+        <section class="card drawer" id="form-card">
+          <div class="section-header">
+            <div>
+              <div class="eyebrow">Admin</div>
+              <div class="title" id="form-title">Create product</div>
+            </div>
+            <div class="row">
+              <div class="pill" id="form-mode">New</div>
+              <button class="btn ghost small" type="button" id="close-form">Close</button>
+            </div>
+          </div>
+          <form id="product-form" class="stack">
+            <div>
+              <label for="product-name">Name</label>
+              <input id="product-name" required placeholder="Product name">
+            </div>
+            <div>
+              <label for="product-description">Description</label>
+              <textarea id="product-description" placeholder="Short summary (optional)"></textarea>
+            </div>
+            <div class="form-grid">
+              <div>
+                <label for="product-price">Price</label>
+                <input id="product-price" type="text" inputmode="decimal" required>
+              </div>
+              <div>
+                <label for="product-stock">Stock</label>
+                <input id="product-stock" type="text" inputmode="numeric" required>
+              </div>
+            </div>
+            <div>
+              <label for="product-categories">Categories</label>
+              <select id="product-categories" multiple size="4"></select>
+              <p class="helper">Hold Ctrl/Cmd to select multiple categories</p>
+            </div>
+            <div class="row between">
+              <button class="btn primary" type="submit">Save</button>
+              <div class="row">
+                <button class="btn ghost" type="button" id="cancel-edit">Reset</button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="confirm-overlay" class="confirm-overlay hidden"></div>
+  <div id="confirm-dialog" class="confirm-dialog hidden">
+    <div class="confirm-title">Confirm delete</div>
+    <p class="confirm-message" id="confirm-message">Delete this item?</p>
+    <div class="row between">
+      <button class="btn ghost" type="button" id="confirm-cancel">Cancel</button>
+      <button class="btn primary" type="button" id="confirm-accept">Delete</button>
+    </div>
+  </div>
+
+  <script>
+    const apiBase = window.location.origin;
+    const state = {
+      token: null,
+      role: null,
+      email: null,
+      products: [],
+      categories: [],
+      loadingProducts: false,
+      loadingCategories: false,
+      editingId: null,
+      ws: null,
+      productsTotal: 0,
+      productsPage: 1,
+      productsPageSize: 25,
+    };
+
+    const els = {
+      statusText: document.getElementById('status-text'),
+      rolePill: document.getElementById('role-pill'),
+      logoutBtn: document.getElementById('logout-btn'),
+      toast: document.getElementById('toast'),
+      loginForm: document.getElementById('login-form'),
+      loginBtn: document.getElementById('login-btn'),
+      loginCard: document.getElementById('login-card'),
+      email: document.getElementById('email'),
+      password: document.getElementById('password'),
+      search: document.getElementById('search'),
+      searchSubmit: document.getElementById('search-submit'),
+      categoryFilter: document.getElementById('category-filter'),
+      refreshBtn: document.getElementById('refresh-products'),
+      newProductBtn: document.getElementById('new-product-btn'),
+      productsBody: document.getElementById('products-body'),
+      productsCard: document.getElementById('products-card'),
+      productsListCard: document.getElementById('products-list-card'),
+      paneGrid: document.getElementById('pane-grid'),
+      pagePrev: document.getElementById('page-prev'),
+      pageNext: document.getElementById('page-next'),
+      pageLabel: document.getElementById('page-label'),
+      closeForm: document.getElementById('close-form'),
+      drawerOverlay: document.getElementById('drawer-overlay'),
+      productsLoading: document.getElementById('products-loading'),
+      productForm: document.getElementById('product-form'),
+      formTitle: document.getElementById('form-title'),
+      formMode: document.getElementById('form-mode'),
+      formCard: document.getElementById('form-card'),
+      productName: document.getElementById('product-name'),
+      productDescription: document.getElementById('product-description'),
+      productPrice: document.getElementById('product-price'),
+      productStock: document.getElementById('product-stock'),
+      productCategories: document.getElementById('product-categories'),
+      cancelEdit: document.getElementById('cancel-edit'),
+      confirmOverlay: document.getElementById('confirm-overlay'),
+      confirmDialog: document.getElementById('confirm-dialog'),
+      confirmMessage: document.getElementById('confirm-message'),
+      confirmAccept: document.getElementById('confirm-accept'),
+      confirmCancel: document.getElementById('confirm-cancel'),
+    };
+    let confirmResolver = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindEvents();
+      hydrateSession();
+      renderProducts();
+      renderAdminVisibility();
+      renderAuthVisibility();
+    });
+
+    function bindEvents() {
+      els.loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await login();
+      });
+
+      els.logoutBtn.addEventListener('click', () => {
+        clearSession();
+        renderProducts();
+        renderAdminVisibility();
+        renderAuthVisibility();
+        showToast('Signed out');
+      });
+
+      els.refreshBtn.addEventListener('click', () => {
+        if (!state.token) return showToast('Sign in to load products', true);
+        refreshData();
+      });
+
+      els.newProductBtn.addEventListener('click', () => {
+        startCreate();
+        openFormDrawer();
+      });
+
+      els.categoryFilter.addEventListener('change', () => {
+        if (state.token) {
+          state.productsPage = 1;
+          loadProducts();
+        }
+      });
+
+      els.search.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          runSearch();
+        }
+      });
+
+      if (els.searchSubmit) {
+        els.searchSubmit.addEventListener('click', () => runSearch());
+      }
+
+      els.pagePrev.addEventListener('click', () => changePage(-1));
+      els.pageNext.addEventListener('click', () => changePage(1));
+      els.closeForm.addEventListener('click', () => {
+        startCreate();
+        closeFormDrawer();
+      });
+      els.drawerOverlay.addEventListener('click', () => closeFormDrawer());
+
+      els.productForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProduct();
+      });
+
+      els.cancelEdit.addEventListener('click', () => startCreate());
+
+      els.productsBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const id = Number(btn.dataset.id);
+        const product = state.products.find((p) => p.ID === id);
+        if (btn.dataset.action === 'edit' && product) {
+          startEdit(product);
+        }
+        if (btn.dataset.action === 'delete') {
+          deleteProduct(id);
+        }
+      });
+
+      if (els.confirmAccept) {
+        els.confirmAccept.addEventListener('click', () => closeConfirm(true));
+      }
+      if (els.confirmCancel) {
+        els.confirmCancel.addEventListener('click', () => closeConfirm(false));
+      }
+      if (els.confirmOverlay) {
+        els.confirmOverlay.addEventListener('click', () => closeConfirm(false));
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isConfirmOpen()) {
+          closeConfirm(false);
+        }
+      });
+    }
+
+    function hydrateSession() {
+      const saved = localStorage.getItem('bsmart_session');
+      if (!saved) return;
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.token) {
+          state.token = parsed.token;
+          state.role = parsed.role;
+          state.email = parsed.email;
+          renderStatus();
+          renderAdminVisibility();
+          renderAuthVisibility();
+          connectWs();
+          refreshData();
+        }
+      } catch (err) {
+        console.warn('Could not parse stored session', err);
+      }
+    }
+
+    async function login() {
+      const email = els.email.value.trim();
+      const password = els.password.value;
+      if (!email || !password) {
+        showToast('Enter email and password', true);
+        return;
+      }
+      els.loginBtn.disabled = true;
+      try {
+        const res = await fetch(apiBase + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error || 'Login failed');
+        }
+        state.token = data.token;
+        state.role = data.role;
+        state.email = data.email;
+        localStorage.setItem('bsmart_session', JSON.stringify({ token: data.token, role: data.role, email: data.email }));
+        renderStatus();
+        renderAdminVisibility();
+        renderAuthVisibility();
+        connectWs();
+        showToast(`Signed in as ${data.email}`);
+        refreshData();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Login failed', true);
+      } finally {
+        els.loginBtn.disabled = false;
+      }
+    }
+
+    function clearSession() {
+      state.token = null;
+      state.role = null;
+      state.email = null;
+      state.products = [];
+      state.categories = [];
+      state.productsTotal = 0;
+      state.productsPage = 1;
+      state.productsPageSize = 25;
+      state.editingId = null;
+      if (state.ws) {
+        state.ws.close();
+        state.ws = null;
+      }
+      localStorage.removeItem('bsmart_session');
+      renderStatus();
+      renderAdminVisibility();
+      renderAuthVisibility();
+    }
+
+    async function refreshData() {
+      await Promise.all([loadCategories(), loadProducts()]);
+    }
+
+    async function loadCategories() {
+      if (!state.token) return;
+      state.loadingCategories = true;
+      renderCategories();
+      try {
+        const data = await fetchJson('/api/categories');
+        state.categories = data?.data || [];
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Could not load categories', true);
+      } finally {
+        state.loadingCategories = false;
+        renderCategories();
+      }
+    }
+
+    async function loadProducts() {
+      if (!state.token) return;
+      state.loadingProducts = true;
+      renderProducts();
+      try {
+        const params = new URLSearchParams({
+          page_size: state.productsPageSize,
+          page: state.productsPage,
+        });
+        const q = els.search.value.trim();
+        const categoryId = els.categoryFilter.value;
+        if (q) params.set('q', q);
+        if (categoryId) params.set('category_id', categoryId);
+        const data = await fetchJson('/api/products?' + params.toString());
+        const total = Number(data?.total) || 0;
+        const pageSize = Number(data?.page_size) || state.productsPageSize;
+        const incomingPage = Number(data?.page) || state.productsPage || 1;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const safePage = Math.min(incomingPage, totalPages);
+
+        state.productsTotal = total;
+        state.productsPageSize = pageSize;
+
+        if (safePage !== incomingPage) {
+          state.productsPage = safePage;
+          state.loadingProducts = false;
+          await loadProducts();
+          return;
+        }
+
+        state.productsPage = safePage;
+        state.products = data?.data || [];
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Could not load products', true);
+      } finally {
+        state.loadingProducts = false;
+        renderProducts();
+      }
+    }
+
+    function runSearch() {
+      if (!state.token) {
+        showToast('Sign in to search', true);
+        return;
+      }
+      state.productsPage = 1;
+      loadProducts();
+    }
+
+    function changePage(delta) {
+      if (!state.token || state.loadingProducts) return;
+      const totalPages = Math.max(1, Math.ceil((state.productsTotal || 0) / (state.productsPageSize || 25)));
+      const nextPage = Math.min(Math.max(1, state.productsPage + delta), totalPages);
+      if (nextPage === state.productsPage) return;
+      state.productsPage = nextPage;
+      loadProducts();
+    }
+
+    function openFormDrawer() {
+      if (els.formCard) {
+        els.formCard.classList.add('open');
+      }
+      if (els.drawerOverlay) {
+        els.drawerOverlay.classList.add('visible');
+      }
+    }
+
+    function closeFormDrawer() {
+      if (els.formCard) {
+        els.formCard.classList.remove('open');
+      }
+      if (els.drawerOverlay) {
+        els.drawerOverlay.classList.remove('visible');
+      }
+    }
+
+    function isConfirmOpen() {
+      return els.confirmDialog && els.confirmDialog.classList.contains('visible');
+    }
+
+    function showConfirm(message) {
+      if (!els.confirmDialog || !els.confirmOverlay || !els.confirmMessage) {
+        return Promise.resolve(window.confirm(message));
+      }
+      els.confirmMessage.textContent = message;
+      els.confirmDialog.classList.remove('hidden');
+      els.confirmOverlay.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        els.confirmDialog.classList.add('visible');
+        els.confirmOverlay.classList.add('visible');
+      });
+      return new Promise((resolve) => {
+        confirmResolver = resolve;
+      });
+    }
+
+    function closeConfirm(choice = false) {
+      if (!els.confirmDialog || !els.confirmOverlay) return;
+      els.confirmDialog.classList.remove('visible');
+      els.confirmOverlay.classList.remove('visible');
+      setTimeout(() => {
+        if (!els.confirmDialog.classList.contains('visible')) {
+          els.confirmDialog.classList.add('hidden');
+        }
+        if (!els.confirmOverlay.classList.contains('visible')) {
+          els.confirmOverlay.classList.add('hidden');
+        }
+      }, 170);
+      if (confirmResolver) {
+        confirmResolver(choice);
+        confirmResolver = null;
+      }
+    }
+
+    async function saveProduct() {
+      if (!state.token || state.role !== 'admin') {
+        showToast('Admin access required', true);
+        return;
+      }
+      const payload = buildProductPayload();
+      if (!payload) return;
+      const isEdit = Boolean(state.editingId);
+      const url = isEdit ? `/api/products/${state.editingId}` : '/api/products';
+      try {
+        await fetchJson(url, {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        showToast(isEdit ? 'Product updated' : 'Product created', false, true);
+        startCreate();
+        closeFormDrawer();
+        await loadProducts();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Could not save product', true);
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!state.token || state.role !== 'admin') {
+        showToast('Admin access required', true);
+        return;
+      }
+      const product = state.products.find((p) => p.ID === id);
+      const name = product ? product.Name : 'this product';
+      const confirmed = await showConfirm(`Delete ${name}?`);
+      if (!confirmed) return;
+      try {
+        await fetchJson(`/api/products/${id}`, { method: 'DELETE' });
+        showToast('Product removed', false, true);
+        await loadProducts();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Could not delete product', true);
+      }
+    }
+
+    function buildProductPayload() {
+      const name = els.productName.value.trim();
+      const description = els.productDescription.value.trim();
+      const priceInput = els.productPrice.value.trim().replace(',', '.');
+      const stockInput = els.productStock.value.trim().replace(',', '.');
+      const price = parseFloat(priceInput);
+      const stock = Number(stockInput);
+      const categoryIds = Array.from(els.productCategories.selectedOptions).map((o) => Number(o.value));
+      if (!name) {
+        showToast('Name is required', true);
+        return null;
+      }
+      if (Number.isNaN(price) || price < 0) {
+        showToast('Price must be zero or more', true);
+        return null;
+      }
+      if (!Number.isInteger(stock) || stock < 0) {
+        showToast('Stock must be a non-negative integer', true);
+        return null;
+      }
+      if (!categoryIds.length) {
+        showToast('Pick at least one category', true);
+        return null;
+      }
+      return {
+        name,
+        description,
+        price,
+        stock,
+        category_ids: categoryIds,
+      };
+    }
+
+    function startCreate() {
+      state.editingId = null;
+      els.formTitle.textContent = 'Create product';
+      els.formMode.textContent = 'New';
+      els.productName.value = '';
+      els.productDescription.value = '';
+      els.productPrice.value = '';
+      els.productStock.value = '';
+      Array.from(els.productCategories.options).forEach((opt) => (opt.selected = false));
+    }
+
+    function startEdit(product) {
+      state.editingId = product.ID;
+      els.formTitle.textContent = `Edit ${product.Name}`;
+      els.formMode.textContent = 'Edit';
+      els.productName.value = product.Name || '';
+      els.productDescription.value = product.Description || '';
+      els.productPrice.value = product.Price;
+      els.productStock.value = product.Stock;
+      const ids = new Set((product.Categories || []).map((c) => String(c.ID)));
+      Array.from(els.productCategories.options).forEach((opt) => {
+        opt.selected = ids.has(opt.value);
+      });
+      openFormDrawer();
+    }
+
+    function renderStatus() {
+      if (state.token) {
+        els.statusText.textContent = state.email;
+        els.rolePill.textContent = state.role;
+        els.rolePill.hidden = false;
+        els.logoutBtn.hidden = false;
+      } else {
+        els.statusText.textContent = 'Not signed in';
+        els.rolePill.hidden = true;
+        els.logoutBtn.hidden = true;
+      }
+    }
+
+    function connectWs() {
+      if (!state.token || state.ws) return;
+      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+      const url = `${protocol}://${location.host}/ws?token=${encodeURIComponent(state.token)}`;
+      const ws = new WebSocket(url);
+      state.ws = ws;
+
+      ws.onopen = () => {};
+      ws.onclose = () => {
+        state.ws = null;
+        // Do not auto-reconnect to keep it simple; reconnect on next login or manual trigger.
+      };
+      ws.onerror = () => showToast('WebSocket error', true);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type && msg.type.startsWith('product.')) {
+            // Light refresh on product events
+            loadProducts();
+            showToast(`Product ${msg.type.split('.')[1]} event`, false, true);
+          }
+        } catch (_) {
+          // ignore malformed events
+        }
+      };
+    }
+
+    function renderAdminVisibility() {
+      const isAdmin = state.role === 'admin';
+      els.formCard.style.display = isAdmin ? 'block' : 'none';
+      els.newProductBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (!isAdmin) {
+        closeFormDrawer();
+      }
+    }
+
+    function renderAuthVisibility() {
+      const show = Boolean(state.token);
+      [els.productsCard, els.productsListCard, els.formCard, els.paneGrid].forEach((el) => {
+        if (!el) return;
+        el.style.display = show ? '' : 'none';
+      });
+      if (els.drawerOverlay) {
+        els.drawerOverlay.style.display = show ? '' : 'none';
+      }
+      if (els.loginCard) {
+        els.loginCard.style.display = show ? 'none' : '';
+      }
+      if (!show) {
+        closeFormDrawer();
+      }
+    }
+
+    function renderCategories() {
+      const select = els.categoryFilter;
+      const formSelect = els.productCategories;
+      const loadingLabel = state.loadingCategories ? 'Loading...' : 'All categories';
+      select.innerHTML = `<option value="">${loadingLabel}</option>`;
+      formSelect.innerHTML = '';
+      if (!state.token) return;
+      const categories = [...state.categories].sort((a, b) => a.Name.localeCompare(b.Name));
+      categories.forEach((cat) => {
+        const opt = document.createElement('option');
+        opt.value = cat.ID;
+        opt.textContent = cat.Name;
+        select.appendChild(opt);
+        formSelect.appendChild(opt.cloneNode(true));
+      });
+    }
+
+    function renderPagination() {
+      const prev = els.pagePrev;
+      const next = els.pageNext;
+      const label = els.pageLabel;
+      if (!prev || !next || !label) return;
+      if (!state.token) {
+        prev.disabled = true;
+        next.disabled = true;
+        label.textContent = 'Page 1';
+        return;
+      }
+      const total = state.productsTotal || 0;
+      const pageSize = state.productsPageSize || 25;
+      const page = state.productsPage || 1;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+      const end = total === 0 ? 0 : Math.min(total, page * pageSize);
+      label.textContent = total
+        ? `Page ${page} of ${totalPages} · ${start}-${end} of ${total}`
+        : `Page ${page} of ${totalPages} · 0 results`;
+      prev.disabled = state.loadingProducts || page <= 1;
+      next.disabled = state.loadingProducts || page >= totalPages || total === 0;
+    }
+
+    function renderProducts() {
+      renderPagination();
+      const container = els.productsBody;
+      const overlay = els.productsLoading;
+
+      const setOverlay = (show) => {
+        if (!overlay) return;
+        overlay.classList.toggle('visible', show);
+        overlay.classList.toggle('hidden', !show);
+      };
+
+      if (state.loadingProducts && state.products.length) {
+        setOverlay(true);
+      } else {
+        setOverlay(false);
+      }
+
+      if (!state.token) {
+        container.innerHTML = '<div class="empty">Sign in to browse products.</div>';
+        setOverlay(false);
+        return;
+      }
+
+      if (state.loadingProducts && state.products.length) {
+        return; // keep current list visible while loading
+      }
+
+      container.innerHTML = '';
+
+      if (state.loadingProducts && !state.products.length) {
+        container.innerHTML = '<div class="empty">Loading products...</div>';
+        return;
+      }
+      if (!state.products.length) {
+        container.innerHTML = '<div class="empty">No products found.</div>';
+        return;
+      }
+      state.products.forEach((p) => {
+        container.appendChild(createProductCard(p));
+      });
+      if (state.role === 'admin' && !els.formCard.classList.contains('open')) {
+        startCreate();
+      }
+    }
+
+    function createProductCard(product) {
+      const el = document.createElement('article');
+      el.className = 'product-card';
+      const categories = (product.Categories || []).map((c) => `<span class="pill">${escapeHtml(c.Name)}</span>`).join('');
+      el.innerHTML = `
+        <div class="product-row">
+          <div class="stack" style="gap:2px;">
+            <div class="product-name">${escapeHtml(product.Name)}</div>
+            <div class="product-desc">${escapeHtml(product.Description || 'No description')}</div>
+            <div class="tags">${categories || '<span class="pill">Uncategorized</span>'}</div>
+          </div>
+          <div class="product-meta">
+            <div class="product-price">$${Number(product.Price).toFixed(2)}</div>
+            <div>${product.Stock} in stock</div>
+            <div class="muted">Updated ${new Date(product.UpdatedAt).toLocaleDateString()}</div>
+          </div>
+        </div>
+        ${state.role === 'admin'
+          ? `<div class="row between" style="margin-top:8px;">
+              <div class="meta-id">ID #${product.ID}</div>
+              <div class="row">
+                <button class="btn ghost small" data-action="edit" data-id="${product.ID}">Edit</button>
+                <button class="btn ghost small" data-action="delete" data-id="${product.ID}">Delete</button>
+              </div>
+            </div>`
+          : ''}
+      `;
+      return el;
+    }
+
+    async function fetchJson(path, options = {}) {
+      const headers = options.headers ? { ...options.headers } : {};
+      if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+      const res = await fetch(apiBase + path, { ...options, headers });
+      let data = null;
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : null;
+      } catch (_) {
+        data = null;
+      }
+      if (!res.ok) {
+        const message = data?.error || res.statusText || 'Request failed';
+        throw new Error(message);
+      }
+      return data;
+    }
+
+    function showToast(message, isError = false, subtle = false) {
+      const toast = els.toast;
+      toast.textContent = message;
+      toast.classList.remove('hidden', 'negative', 'positive');
+      if (isError) {
+        toast.classList.add('negative');
+      } else if (subtle) {
+        toast.classList.add('positive');
+      }
+      clearTimeout(showToast.timeout);
+      showToast.timeout = setTimeout(() => toast.classList.add('hidden'), 3200);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

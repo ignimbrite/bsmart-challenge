@@ -226,17 +226,15 @@ paths:
       summary: List categories
       description: Requires role `admin` or `client`.
       parameters:
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/PageSize"
         - $ref: "#/components/parameters/Query"
         - $ref: "#/components/parameters/CategorySort"
       responses:
         "200":
-          description: Paginated categories
+          description: All categories (no pagination)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CategoryListResponse"
+                $ref: "#/components/schemas/CategoryArrayResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -349,7 +347,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: "#/components/schemas/ProductListResponse"
-                  - $ref: "#/components/schemas/CategoryListResponse"
+                  - $ref: "#/components/schemas/CategoryArrayResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -529,6 +527,17 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Category"
+      required: [data]
+    CategoryArrayResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        total:
+          type: integer
+          format: int64
       required: [data]
     CategoryListResponse:
       allOf:

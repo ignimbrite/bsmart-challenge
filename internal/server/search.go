@@ -57,7 +57,6 @@ func (s *Server) searchProducts(c *gin.Context, query SearchQuery) {
 }
 
 func (s *Server) searchCategories(c *gin.Context, query SearchQuery) {
-	page, pageSize, _ := parsePagination(query.PaginationQuery)
 	order := sanitizeSort(query.Sort, categorySortOptions, "created_at desc")
 
 	db := s.db.Model(&models.Category{})
@@ -66,22 +65,14 @@ func (s *Server) searchCategories(c *gin.Context, query SearchQuery) {
 		db = db.Where("name ILIKE ? OR description ILIKE ?", like, like)
 	}
 
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		respondError(c, http.StatusInternalServerError, "failed to count categories")
-		return
-	}
-
 	var categories []models.Category
-	if err := db.Order(order).Limit(pageSize).Offset((page - 1) * pageSize).Find(&categories).Error; err != nil {
+	if err := db.Order(order).Find(&categories).Error; err != nil {
 		respondError(c, http.StatusInternalServerError, "failed to search categories")
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data":      categories,
-		"page":      page,
-		"page_size": pageSize,
-		"total":     total,
+		"data":  categories,
+		"total": len(categories),
 	})
 }

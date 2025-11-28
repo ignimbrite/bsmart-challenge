@@ -9,7 +9,7 @@ type Product struct {
 	Price       float64    `gorm:"type:numeric(12,2);not null"`
 	Stock       int        `gorm:"not null;default:0;index"`
 	Categories  []Category `gorm:"many2many:product_categories;constraint:OnDelete:CASCADE"`
-	History     []ProductHistory
+	History     []ProductHistory `gorm:"constraint:OnDelete:CASCADE"`
 	CreatedAt   time.Time `gorm:"index"`
 	UpdatedAt   time.Time
 }

@@ -50,6 +50,9 @@ func (s *Server) registerRoutes() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
+	s.engine.StaticFS("/web", gin.Dir("docs", false))
+	s.engine.StaticFS("/docs", gin.Dir("docs", false))
+
 	s.engine.GET("/ws", s.authMiddleware("admin", "client"), s.handleWebSocket)
 
 	api := s.engine.Group("/api")

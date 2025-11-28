@@ -19,6 +19,11 @@ type SearchQuery struct {
 	PaginationQuery
 }
 
+type CategoryQuery struct {
+	Sort  string `form:"sort"`
+	Query string `form:"q"`
+}
+
 type CreateCategoryRequest struct {
 	Name        string `json:"name" binding:"required,min=2,max=255"`
 	Description string `json:"description" binding:"omitempty,max=1000"`

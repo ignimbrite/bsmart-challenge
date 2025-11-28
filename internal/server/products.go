@@ -199,14 +199,27 @@ func (s *Server) deleteProduct(c *gin.Context) {
 		return
 	}
 
-	res := s.db.Delete(&models.Product{}, id)
-	if err := res.Error; err != nil {
-		respondError(c, http.StatusInternalServerError, "failed to delete product")
-		return
-	}
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("product_id = ?", id).Delete(&models.ProductHistory{}).Error; err != nil {
+			return err
+		}
 
-	if res.RowsAffected == 0 {
-		respondError(c, http.StatusNotFound, "product not found")
+		res := tx.Delete(&models.Product{}, id)
+		if err := res.Error; err != nil {
+			return err
+		}
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return nil
+	})
+
+	if err != nil {
+		if errorsIs(err, gorm.ErrRecordNotFound) {
+			respondError(c, http.StatusNotFound, "product not found")
+			return
+		}
+		respondError(c, http.StatusInternalServerError, "failed to delete product")
 		return
 	}
 
