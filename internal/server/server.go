@@ -128,7 +128,7 @@ func corsMiddleware(allowed []string) gin.HandlerFunc {
 		if allowOrigin || c.Request.Method == http.MethodOptions {
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Accept")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type,Accept,ngrok-skip-browser-warning")
 		}
 		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
