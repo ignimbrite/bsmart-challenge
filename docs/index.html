@@ -549,6 +549,15 @@
     const apiBase = window.location.hostname.endsWith('github.io')
       ? 'https://8113c6fc74a6.ngrok-free.app'
       : window.location.origin;
+    const needsNgrokBypass = apiBase.includes('ngrok-free');
+
+    function buildUrl(path) {
+      const url = new URL(path, apiBase);
+      if (needsNgrokBypass) {
+        url.searchParams.set('ngrok-skip-browser-warning', 'true');
+      }
+      return url.toString();
+    }
     const state = {
       token: null,
       role: null,
@@ -730,7 +739,7 @@
       }
       els.loginBtn.disabled = true;
       try {
-        const res = await fetch(apiBase + '/api/auth/login', {
+        const res = await fetch(buildUrl('/api/auth/login'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
@@ -1206,7 +1215,8 @@
     async function fetchJson(path, options = {}) {
       const headers = options.headers ? { ...options.headers } : {};
       if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
-      const res = await fetch(apiBase + path, { ...options, headers });
+      const url = buildUrl(path);
+      const res = await fetch(url, { ...options, headers });
       let data = null;
       try {
         const text = await res.text();
