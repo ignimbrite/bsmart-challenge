@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/websocket"
 )
 
 type AuthClaims struct {
@@ -53,8 +54,10 @@ func (s *Server) extractToken(c *gin.Context) (string, error) {
 		return parts[1], nil
 	}
 
-	if token := c.Query("token"); token != "" {
-		return token, nil
+	if websocket.IsWebSocketUpgrade(c.Request) || c.FullPath() == "/ws" {
+		if token := c.Query("token"); token != "" {
+			return token, nil
+		}
 	}
 
 	return "", errors.New("missing authorization token")

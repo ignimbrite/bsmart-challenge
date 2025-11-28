@@ -296,6 +296,7 @@
       grid-template-columns: 1fr auto;
       gap: 8px;
       align-items: stretch;
+      flex: 1;
     }
 
     .input-action input {
@@ -414,11 +415,11 @@
   </style>
 </head>
 <body>
-  <div class="page">
-    <header class="topbar">
-      <div class="brand"><span class="dot"></span>BSMART Catalog</div>
-      <div class="session">
-        <span id="status-text">Not signed in</span>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand"><span class="dot"></span>BSMART Catalog</div>
+        <div class="session">
+          <span id="status-text">Not signed in</span>
         <span id="role-pill" class="status-pill" hidden></span>
         <button id="logout-btn" class="btn ghost small" hidden>Log out</button>
       </div>
@@ -472,14 +473,27 @@
 
       <div class="pane-grid requires-auth" id="pane-grid">
         <section class="card" id="products-list-card">
-          <div class="section-header">
-            <div>
-              <div class="title">Results</div>
-            </div>
-            <div class="pager">
-              <button class="btn ghost small" id="page-prev" type="button">&lt; Prev</button>
-              <div class="pill" id="page-label">Page 1</div>
-              <button class="btn ghost small" id="page-next" type="button">Next &gt;</button>
+          <div class="section-header" style="align-items:center;">
+            <div><div class="title">Results</div></div>
+            <div class="row" style="align-items:center; gap:10px;">
+              <div class="pager" style="gap:6px;">
+                <label for="sort-filter" class="pill" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                  Sort
+                  <select id="sort-filter" style="border: none; background: transparent; font: inherit; padding: 2px 0;">
+                    <option value="">Newest</option>
+                    <option value="price_asc">Price ↑</option>
+                    <option value="price_desc">Price ↓</option>
+                    <option value="name_asc">Name A→Z</option>
+                    <option value="name_desc">Name Z→A</option>
+                    <option value="oldest">Oldest</option>
+                  </select>
+                </label>
+              </div>
+              <div class="pager">
+                <button class="btn ghost small" id="page-prev" type="button">&lt; Prev</button>
+                <div class="pill" id="page-label">Page 1</div>
+                <button class="btn ghost small" id="page-next" type="button">Next &gt;</button>
+              </div>
             </div>
           </div>
           <div id="products-body" class="stack"></div>
@@ -571,6 +585,7 @@
       productsTotal: 0,
       productsPage: 1,
       productsPageSize: 25,
+      productsSort: '',
     };
 
     const els = {
@@ -586,6 +601,7 @@
       search: document.getElementById('search'),
       searchSubmit: document.getElementById('search-submit'),
       categoryFilter: document.getElementById('category-filter'),
+      sortFilter: document.getElementById('sort-filter'),
       refreshBtn: document.getElementById('refresh-products'),
       newProductBtn: document.getElementById('new-product-btn'),
       productsBody: document.getElementById('products-body'),
@@ -651,6 +667,13 @@
       els.categoryFilter.addEventListener('change', () => {
         if (state.token) {
           state.productsPage = 1;
+          loadProducts();
+        }
+      });
+      els.sortFilter.addEventListener('change', () => {
+        if (state.token) {
+          state.productsPage = 1;
+          state.productsSort = els.sortFilter.value;
           loadProducts();
         }
       });
@@ -775,6 +798,7 @@
       state.productsTotal = 0;
       state.productsPage = 1;
       state.productsPageSize = 25;
+      state.productsSort = '';
       state.editingId = null;
       if (state.ws) {
         state.ws.close();
@@ -817,8 +841,10 @@
         });
         const q = els.search.value.trim();
         const categoryId = els.categoryFilter.value;
+        const sort = state.productsSort;
         if (q) params.set('q', q);
         if (categoryId) params.set('category_id', categoryId);
+        if (sort) params.set('sort', sort);
         const data = await fetchJson('/api/products?' + params.toString());
         const total = Number(data?.total) || 0;
         const pageSize = Number(data?.page_size) || state.productsPageSize;
@@ -1053,21 +1079,29 @@
       ws.onopen = () => {};
       ws.onclose = () => {
         state.ws = null;
-        // Do not auto-reconnect to keep it simple; reconnect on next login or manual trigger.
       };
       ws.onerror = () => showToast('WebSocket error', true);
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type && msg.type.startsWith('product.')) {
-            // Light refresh on product events
-            loadProducts();
-            showToast(`Product ${msg.type.split('.')[1]} event`, false, true);
-          }
-        } catch (_) {
-          // ignore malformed events
-        }
-      };
+      ws.onmessage = (event) => handleWsMessage(event.data);
+    }
+
+    function handleWsMessage(raw) {
+      if (!state.token) return;
+      let msg = null;
+      try {
+        msg = typeof raw === 'string' ? JSON.parse(raw) : JSON.parse(String(raw));
+      } catch (_) {
+        return;
+      }
+      const evt = typeof msg?.event === 'string' ? msg.event : typeof msg?.type === 'string' ? msg.type : '';
+      if (!evt) return;
+      const [, action = 'event'] = evt.split('.');
+      if (evt.startsWith('product.')) {
+        loadProducts();
+        showToast(`Product ${action}`, false, true);
+      } else if (evt.startsWith('category.')) {
+        loadCategories();
+        showToast(`Category ${action}`, false, true);
+      }
     }
 
     function renderAdminVisibility() {

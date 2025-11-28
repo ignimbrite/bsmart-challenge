@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,8 @@ var productSortOptions = map[string]string{
 	"newest":     "created_at desc",
 	"oldest":     "created_at asc",
 }
+
+var errInvalidCategories = errors.New("some categories not found")
 
 func (s *Server) listProducts(c *gin.Context) {
 	var query ProductQuery
@@ -105,13 +108,16 @@ func (s *Server) createProduct(c *gin.Context) {
 		product.Categories = categories
 	}
 
-	if err := s.db.Create(&product).Error; err != nil {
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&product).Error; err != nil {
+			return err
+		}
+		if err := s.recordHistory(tx, product.ID, product.Price, product.Stock); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		respondError(c, http.StatusInternalServerError, "failed to create product")
-		return
-	}
-
-	if err := s.recordHistory(product.ID, product.Price, product.Stock); err != nil {
-		respondError(c, http.StatusInternalServerError, "failed to record history")
 		return
 	}
 
@@ -133,59 +139,69 @@ func (s *Server) updateProduct(c *gin.Context) {
 	}
 
 	var product models.Product
-	if err := s.db.Preload("Categories").First(&product, id).Error; err != nil {
+	originalPrice := 0.0
+	originalStock := 0
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Preload("Categories").First(&product, id).Error; err != nil {
+			return err
+		}
+
+		originalPrice = product.Price
+		originalStock = product.Stock
+
+		if req.Name != nil {
+			product.Name = *req.Name
+		}
+		if req.Description != nil {
+			product.Description = *req.Description
+		}
+		if req.Price != nil {
+			product.Price = *req.Price
+		}
+		if req.Stock != nil {
+			product.Stock = *req.Stock
+		}
+
+		if req.CategoryIDs != nil {
+			var categories []models.Category
+			if len(req.CategoryIDs) > 0 {
+				if err := tx.Where("id IN ?", req.CategoryIDs).Find(&categories).Error; err != nil {
+					return err
+				}
+				if len(categories) != len(req.CategoryIDs) {
+					return errInvalidCategories
+				}
+			}
+			if err := tx.Model(&product).Association("Categories").Replace(categories); err != nil {
+				return err
+			}
+			product.Categories = categories
+		}
+
+		if err := tx.Save(&product).Error; err != nil {
+			return err
+		}
+
+		if product.Price != originalPrice || product.Stock != originalStock {
+			if err := s.recordHistory(tx, product.ID, product.Price, product.Stock); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		if errorsIs(err, gorm.ErrRecordNotFound) {
 			respondError(c, http.StatusNotFound, "product not found")
 			return
 		}
-		respondError(c, http.StatusInternalServerError, "failed to fetch product")
-		return
-	}
-
-	originalPrice := product.Price
-	originalStock := product.Stock
-
-	if req.Name != nil {
-		product.Name = *req.Name
-	}
-	if req.Description != nil {
-		product.Description = *req.Description
-	}
-	if req.Price != nil {
-		product.Price = *req.Price
-	}
-	if req.Stock != nil {
-		product.Stock = *req.Stock
-	}
-
-	if req.CategoryIDs != nil {
-		var categories []models.Category
-		if len(req.CategoryIDs) > 0 {
-			if err := s.db.Where("id IN ?", req.CategoryIDs).Find(&categories).Error; err != nil {
-				respondError(c, http.StatusBadRequest, "invalid categories")
-				return
-			}
-			if len(categories) != len(req.CategoryIDs) {
-				respondError(c, http.StatusBadRequest, "some categories not found")
-				return
-			}
-		}
-		if err := s.db.Model(&product).Association("Categories").Replace(categories); err != nil {
-			respondError(c, http.StatusInternalServerError, "failed to update categories")
+		if errors.Is(err, errInvalidCategories) {
+			respondError(c, http.StatusBadRequest, "some categories not found")
 			return
 		}
-	}
-
-	if err := s.db.Save(&product).Error; err != nil {
 		respondError(c, http.StatusInternalServerError, "failed to update product")
 		return
-	}
-
-	if product.Price != originalPrice || product.Stock != originalStock {
-		if err := s.recordHistory(product.ID, product.Price, product.Stock); err != nil {
-			respondError(c, http.StatusInternalServerError, "failed to record history")
-			return
-		}
 	}
 
 	s.wsHub.Broadcast(NewWSMessage("product.updated", product))

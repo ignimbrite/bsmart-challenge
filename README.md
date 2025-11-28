@@ -2,6 +2,9 @@
 
 API REST + WebSocket para gestión de productos y categorías en Go.
 
+## Demo en vivo
+GitHub Pages (Front), AWS Lightsail (Backend): https://ignimbrite.github.io/bsmart-challenge/
+
 ## 1. Stack
 - Go 1.22
 - Gin (HTTP)
@@ -35,6 +38,7 @@ API REST + WebSocket para gestión de productos y categorías en Go.
    ```
 
 ## 4. Endpoints principales
+- OpenAPI (ReDoc): https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/ignimbrite/bsmart-challenge/refs/heads/main/openapi.yaml
 - **Auth**: `POST /api/auth/login` — seed dev: `admin@bsmart.test` / `admin123`.
 - **Productos** (GET `admin|client`; escritura `admin`):
   - `GET /api/products`

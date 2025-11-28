@@ -13,6 +13,8 @@ FROM alpine:3.19
 WORKDIR /app
 RUN adduser -D -u 10001 appuser
 COPY --from=builder /app/server /app/server
+COPY --from=builder /app/docs /app/docs
+COPY --from=builder /app/openapi.yaml /app/openapi.yaml
 COPY .env.example /app/.env.example
 ENV APP_ENV=production \
     HTTP_PORT=8080

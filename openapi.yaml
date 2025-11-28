@@ -321,7 +321,9 @@ paths:
     get:
       tags: [Search]
       summary: Full-text search for products or categories
-      description: Requires role `admin` or `client`.
+      description: >
+        Requires role `admin` or `client`. Pagination (`page`, `page_size`) applies
+        only when `type=product`; for `type=category` all results are returned without pagination.
       parameters:
         - in: query
           name: type
@@ -338,7 +340,9 @@ paths:
           schema:
             type: string
             enum: [price_asc, price_desc, name_asc, name_desc, newest, oldest]
-          description: Sort options (product sorts are used when `type=product`, category sorts when `type=category`)
+          description: >
+            Sort options: for `type=product` use `price_asc|price_desc|name_asc|name_desc|newest|oldest`;
+            for `type=category` use `name_asc|name_desc|newest|oldest` (other values are ignored).
       responses:
         "200":
           description: Search results
