@@ -31,6 +31,7 @@ GitHub Pages (Front), AWS Lightsail (Backend): https://ignimbrite.github.io/bsma
 2) Base de datos:
    ```bash
    docker compose up -d db
+   # o docker-compose up -d db
    ```
 3) API:
    ```bash
