@@ -29,7 +29,7 @@ func main() {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
 
-	if cfg.AppEnv == "development" {
+	if cfg.AppEnv == "development" || cfg.SeedOnStart {
 		if err := seed.Run(db); err != nil {
 			log.Fatalf("seed failed: %v", err)
 		}

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +14,7 @@ type Config struct {
 	JWTSecret     string
 	JWTExpiration string
 	WSAllowed     []string
+	SeedOnStart   bool
 }
 
 func Load() Config {
@@ -23,6 +25,7 @@ func Load() Config {
 		JWTSecret:     getEnv("JWT_SECRET", "dev-secret"),
 		JWTExpiration: getEnv("JWT_EXPIRATION", "1h"),
 		WSAllowed:     parseCSV(getEnv("WS_ALLOWED_ORIGINS", "http://localhost:8080,https://ignimbrite.github.io,https://8113c6fc74a6.ngrok-free.app")),
+		SeedOnStart:   getEnvAsBool("SEED_ON_START", false),
 	}
 }
 
@@ -52,4 +55,13 @@ func parseCSV(value string) []string {
 		}
 	}
 	return items
+}
+
+func getEnvAsBool(key string, fallback bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if parsed, err := strconv.ParseBool(value); err == nil {
+			return parsed
+		}
+	}
+	return fallback
 }
