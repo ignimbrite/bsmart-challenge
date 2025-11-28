@@ -78,6 +78,20 @@ Notas rápidas:
     -H 'Content-Type: application/json' \
     -d '{"name":"Mouse","description":"Wireless","price":25.5,"stock":5,"category_ids":[1]}'
   ```
+- Eliminar producto:
+  ```bash
+  TOKEN=... # token de login
+  curl -X DELETE http://localhost/api/products/1 \
+    -H "Authorization: Bearer $TOKEN"
+  ```
+- Actualizar precio/stock:
+  ```bash
+  TOKEN=... # token de login
+  curl -X PUT http://localhost/api/products/11 \
+    -H "Authorization: Bearer $TOKEN" \
+    -H 'Content-Type: application/json' \
+    -d '{"price":199.99,"stock":20}'
+  ```
 - WebSocket:
   ```bash
   TOKEN=... # token de login
