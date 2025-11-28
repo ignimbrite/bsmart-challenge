@@ -157,6 +157,9 @@ func (s *Server) checkOrigin(r *http.Request) bool {
 
 	normalized := normalizeOrigin(origin)
 	for _, allowed := range s.allowedOrigins {
+		if allowed == "*" {
+			return true
+		}
 		if normalizeOrigin(allowed) == normalized {
 			return true
 		}

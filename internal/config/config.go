@@ -22,7 +22,7 @@ func Load() Config {
 		DatabaseURL:   getEnv("DATABASE_URL", buildDatabaseURL()),
 		JWTSecret:     getEnv("JWT_SECRET", "dev-secret"),
 		JWTExpiration: getEnv("JWT_EXPIRATION", "1h"),
-		WSAllowed:     parseCSV(getEnv("WS_ALLOWED_ORIGINS", "http://localhost:8080")),
+		WSAllowed:     parseCSV(getEnv("WS_ALLOWED_ORIGINS", "http://localhost:8080,https://ignimbrite.github.io,https://8113c6fc74a6.ngrok-free.app")),
 	}
 }
 
