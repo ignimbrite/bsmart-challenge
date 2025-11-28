@@ -546,7 +546,9 @@
   </div>
 
   <script>
-    const apiBase = window.location.origin;
+    const apiBase = window.location.hostname.endsWith('github.io')
+      ? 'https://8113c6fc74a6.ngrok-free.app'
+      : window.location.origin;
     const state = {
       token: null,
       role: null,
@@ -1028,8 +1030,14 @@
 
     function connectWs() {
       if (!state.token || state.ws) return;
-      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-      const url = `${protocol}://${location.host}/ws?token=${encodeURIComponent(state.token)}`;
+      let url = '';
+      try {
+        const base = new URL(apiBase);
+        const protocol = base.protocol === 'https:' ? 'wss' : 'ws';
+        url = `${protocol}://${base.host}/ws?token=${encodeURIComponent(state.token)}`;
+      } catch (_) {
+        return;
+      }
       const ws = new WebSocket(url);
       state.ws = ws;
 
